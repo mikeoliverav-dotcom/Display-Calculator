@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Display Size Calculator — Tangram Interiors</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #FFA300;
+    --black: #000000;
+    --white: #FFFFFF;
+    --light-orange: #FFF8E8;
+    --gray-mid: #595959;
+    --gray-light: #F5F5F5;
+    --gray-divider: #CCCCCC;
+    --font: Arial, sans-serif;
+  }
+
+  body { font-family: var(--font); background: var(--gray-light); color: var(--black); min-height: 100vh; }
+
+  header { background: var(--black); }
+  .header-inner {
+    max-width: 960px; margin: 0 auto; padding: 22px 32px 18px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .logo-name { font-size: 20px; font-weight: 700; color: var(--orange); letter-spacing: 0.02em; }
+  .logo-tag { font-size: 11px; color: #888; margin-top: 2px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .header-tool-label { font-size: 12px; color: #666; text-align: right; letter-spacing: 0.04em; text-transform: uppercase; }
+  .header-orange-rule { height: 3px; background: var(--orange); }
+
+  .hero { background: var(--black); border-top: 1px solid #222; padding: 28px 32px 26px; }
+  .hero-inner { max-width: 960px; margin: 0 auto; }
+  .hero h1 { font-size: 26px; font-weight: 700; color: var(--white); line-height: 1.2; }
+  .hero h1 span { color: var(--orange); }
+  .hero p { font-size: 13px; color: #aaa; margin-top: 8px; line-height: 1.6; }
+
+  main { max-width: 960px; margin: 28px auto; padding: 0 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { main { grid-template-columns: 1fr; padding: 0 16px; } .header-inner, .hero { padding-left: 16px; padding-right: 16px; } }
+
+  .card { background: var(--white); border: 1px solid var(--gray-divider); border-radius: 2px; overflow: hidden; }
+  .card-header {
+    background: var(--black); color: var(--white); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase; padding: 10px 18px; border-bottom: 3px solid var(--orange);
+  }
+  .card-body { padding: 20px 18px; }
+
+  /* Category buttons */
+  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+  .cat-btn {
+    border: 1px solid var(--gray-divider); background: var(--gray-light); border-radius: 2px;
+    padding: 10px 8px; cursor: pointer; font-family: var(--font); text-align: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .cat-btn:hover { background: #ffe8b0; border-color: var(--orange); }
+  .cat-btn.active { background: var(--orange); border-color: var(--orange); }
+  .cat-btn .cat-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--black); }
+  .cat-btn .cat-div { font-size: 18px; font-weight: 700; color: var(--black); margin: 4px 0 2px; }
+  .cat-btn .cat-use { font-size: 10px; color: var(--gray-mid); line-height: 1.4; }
+  .cat-btn.active .cat-use { color: #444; }
+
+  /* Distance field */
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-mid); margin-bottom: 6px; }
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--orange); }
+  input[type=number] {
+    width: 72px; padding: 5px 8px; font-family: var(--font); font-size: 14px; font-weight: 700;
+    border: 1px solid #f0d080; border-radius: 2px; background: var(--light-orange);
+    color: var(--black); text-align: center;
+  }
+  input[type=number]:focus { outline: 2px solid var(--orange); outline-offset: 1px; }
+  .unit-label { font-size: 13px; color: var(--gray-mid); }
+
+  /* Result metrics */
+  .results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px; }
+  .metric {
+    background: var(--gray-light); border: 1px solid var(--gray-divider);
+    border-top: 3px solid var(--orange); border-radius: 2px; padding: 12px 14px;
+  }
+  .metric.primary { border-top-color: var(--orange); }
+  .metric .mlabel { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gray-mid); margin-bottom: 6px; }
+  .metric .mval { font-size: 26px; font-weight: 700; color: var(--black); line-height: 1; }
+  .metric .munit { font-size: 12px; color: var(--gray-mid); margin-left: 2px; }
+
+  /* Recommendation */
+  .rec-box {
+    background: var(--black); border-radius: 2px; padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+  .rec-box .rec-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #aaa; }
+  .rec-box .rec-size { font-size: 32px; font-weight: 700; color: var(--orange); }
+  .rec-box .rec-dims { font-size: 12px; color: #888; margin-top: 2px; }
+
+  /* DISCAS reference */
+  .discas-ref {
+    background: var(--light-orange); border-left: 4px solid var(--orange);
+    border-radius: 0 2px 2px 0; padding: 12px 16px; font-size: 12px;
+    color: var(--gray-mid); line-height: 1.7; margin-bottom: 14px;
+  }
+  .discas-ref strong { color: var(--black); }
+  .discas-ref code { font-family: monospace; font-size: 12px; color: var(--black); background: #ffe8b0; padding: 1px 4px; border-radius: 2px; }
+
+  /* Screen table */
+  .sizes-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
+  .sizes-table th { background: var(--black); color: var(--white); font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; padding: 8px 12px; text-align: left; }
+  .sizes-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-divider); }
+  .sizes-table tr:nth-child(even) td { background: var(--light-orange); }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; }
+  .badge-rec { background: var(--orange); color: var(--black); }
+  .badge-pass { background: #d4edda; color: #155724; }
+  .badge-fail { background: #f8d7da; color: #721c24; }
+  .badge-discas { background: #cce5ff; color: #004085; }
+
+  .note { font-size: 11px; color: var(--gray-mid); line-height: 1.6; }
+
+  /* Quick ref panel */
+  .ref-section { max-width: 960px; margin: 0 auto 20px; padding: 0 32px; }
+  @media (max-width: 700px) { .ref-section { padding: 0 16px; } }
+  .ref-card { background: var(--white); border: 1px solid var(--gray-divider); border-radius: 2px; overflow: hidden; }
+  .ref-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 600px) { .ref-grid { grid-template-columns: 1fr; } }
+  .ref-col { padding: 16px 18px; border-right: 1px solid var(--gray-divider); }
+  .ref-col:last-child { border-right: none; }
+  .ref-col-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gray-mid); margin-bottom: 10px; }
+  .ref-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; font-size: 12px; }
+  .ref-row .ref-desc { color: var(--gray-mid); }
+  .ref-val { font-weight: 700; color: var(--black); background: var(--light-orange); padding: 1px 7px; border-radius: 2px; border: 1px solid #f0d080; font-size: 12px; }
+  .ref-val.hl { background: var(--orange); border-color: var(--orange); }
+
+  footer {
+    max-width: 960px; margin: 8px auto 32px; padding: 14px 32px 0;
+    font-size: 11px; color: var(--gray-mid); display: flex; justify-content: space-between;
+    border-top: 1px solid var(--gray-divider);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo-name">Tangram Interiors</div>
+      <div class="logo-tag">We Make Amazing Spaces</div>
+    </div>
+    <div class="header-tool-label">AV Design Tool</div>
+  </div>
+  <div class="header-orange-rule"></div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Display Size Calculator <span>— 16:9</span></h1>
+    <p>Sizing based on the industry 4/6/8 rule. Select your viewing category, enter the distance to the furthest viewer, and get your recommended display size.</p>
+  </div>
+</div>
+
+<main>
+
+  <!-- Left: Inputs -->
+  <div class="card">
+    <div class="card-header">Inputs</div>
+    <div class="card-body">
+
+      <div class="field" style="margin-bottom:20px;">
+        <label>Viewing category</label>
+        <div class="cat-grid">
+          <button class="cat-btn" onclick="setCat('analytical',this)">
+            <div class="cat-name">Analytical</div>
+            <div class="cat-div">÷ 4</div>
+            <div class="cat-use">CAD, medical, schematics</div>
+          </button>
+          <button class="cat-btn active" onclick="setCat('basic',this)">
+            <div class="cat-name">Basic</div>
+            <div class="cat-div">÷ 6</div>
+            <div class="cat-use">Boardrooms, classrooms, presentations</div>
+          </button>
+          <button class="cat-btn" onclick="setCat('passive',this)">
+            <div class="cat-name">Passive</div>
+            <div class="cat-div">÷ 8</div>
+            <div class="cat-use">Lobbies, wayfinding, casual video</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Distance — furthest viewer</label>
+        <div class="slider-row">
+          <input type="range" id="fv-slider" min="4" max="80" step="1" value="11" oninput="onSlider()">
+          <input type="number" id="fv" min="1" max="200" step="1" value="11" oninput="onTyped()">
+          <span class="unit-label">ft</span>
+        </div>
+      </div>
+
+      <div class="discas-ref" id="formula-box"></div>
+
+      <p class="note">
+        <strong>Analytical (÷4)</strong> — CAD, schematics, medical imaging where detail matters.<br><br>
+        <strong>Basic (÷6)</strong> — boardrooms, classrooms, standard presentations.<br><br>
+        <strong>Passive (÷8)</strong> — lobbies, wayfinding, casual video viewing.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right: Results -->
+  <div class="card">
+    <div class="card-header">Results — 16:9 Display</div>
+    <div class="card-body">
+
+      <div class="rec-box">
+        <div>
+          <div class="rec-label">4/6/8 recommendation</div>
+          <div class="rec-size" id="r-rec">—</div>
+          <div class="rec-dims" id="r-dims">—</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="rec-label">Min image height</div>
+          <div style="font-size:22px; font-weight:700; color:var(--white); margin-top:4px;"><span id="r-ih">—</span><span style="font-size:13px; color:#888; margin-left:2px;">in</span></div>
+          <div class="rec-label" style="margin-top:8px;">Min diagonal</div>
+          <div style="font-size:22px; font-weight:700; color:var(--white); margin-top:4px;"><span id="r-diag">—</span><span style="font-size:13px; color:#888; margin-left:2px;">in</span></div>
+        </div>
+      </div>
+
+      <table class="sizes-table">
+        <thead>
+          <tr>
+            <th>Screen size</th>
+            <th>H × W (inches)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="sizes-body"></tbody>
+      </table>
+
+      <p class="note" style="margin-top:10px;">
+        Only showing display sizes that meet or exceed the minimum. <strong style="color:var(--orange);">Recommended</strong> = smallest screen that works for this room.
+      </p>
+    </div>
+  </div>
+
+</main>
+
+<!-- Quick Reference -->
+<div class="ref-section">
+  <div class="ref-card">
+    <div class="card-header">Quick Reference — 4/6/8 Rule</div>
+    <div class="ref-grid">
+      <div class="ref-col">
+        <div class="ref-col-label">Analytical ÷ 4</div>
+        <div style="font-size:12px; color:var(--gray-mid); line-height:1.8;">
+          CAD &amp; engineering drawings<br>
+          Electrical schematics<br>
+          Medical or scientific imaging<br>
+          Photographic inspection
+        </div>
+      </div>
+      <div class="ref-col">
+        <div class="ref-col-label">Basic ÷ 6</div>
+        <div style="font-size:12px; color:var(--gray-mid); line-height:1.8;">
+          Boardrooms &amp; conference rooms<br>
+          Classrooms &amp; training rooms<br>
+          Standard presentations (PPT, Teams)<br>
+          General purpose displays
+        </div>
+      </div>
+      <div class="ref-col">
+        <div class="ref-col-label">Passive ÷ 8</div>
+        <div style="font-size:12px; color:var(--gray-mid); line-height:1.8;">
+          Lobbies &amp; reception areas<br>
+          Wayfinding &amp; digital signage<br>
+          Casual video viewing<br>
+          Retail &amp; hospitality displays
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>tangraminteriors.com</span>
+  <span>Based on the industry 4/6/8 rule</span>
+</footer>
+
+<script>
+let cat = 'basic';
+
+const DIVISORS = { analytical: 4, basic: 6, passive: 8 };
+const SCREENS = [
+  { label: '55"',  diag: 55  },
+  { label: '65"',  diag: 65  },
+  { label: '75"',  diag: 75  },
+  { label: '85"',  diag: 85  },
+  { label: '98"',  diag: 98  },
+  { label: '110"', diag: 110 },
+  { label: '120"', diag: 120 },
+  { label: '135"', diag: 135 },
+  { label: '150"', diag: 150 },
+  { label: '165"', diag: 165 },
+  { label: '180"', diag: 180 },
+  { label: '216"', diag: 216 },
+];
+
+function setCat(c, el) {
+  cat = c;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  update();
+}
+
+function onSlider() {
+  document.getElementById('fv').value = document.getElementById('fv-slider').value;
+  update();
+}
+
+function onTyped() {
+  const val = parseFloat(document.getElementById('fv').value);
+  if (!isNaN(val) && val > 0) {
+    document.getElementById('fv-slider').value = Math.min(Math.max(val, 4), 80);
+    update();
+  }
+}
+
+function update() {
+  const fv = parseFloat(document.getElementById('fv').value) || 11;
+  const divisor = DIVISORS[cat];
+  const ih468 = (fv * 12) / divisor;
+  const iw468 = ih468 * (16 / 9);
+  const diag468 = Math.sqrt(ih468 * ih468 + iw468 * iw468);
+
+  // Update header metrics
+  document.getElementById('r-ih').textContent = ih468.toFixed(1);
+  document.getElementById('r-diag').textContent = diag468.toFixed(1);
+
+  // Find recommended screen (4/6/8)
+  const ratio = 16 / 9;
+  const firstRec = SCREENS.find(s => s.diag >= diag468);
+  if (firstRec) {
+    const sh = firstRec.diag / Math.sqrt(1 + ratio * ratio);
+    const sw = sh * ratio;
+    document.getElementById('r-rec').textContent = firstRec.label;
+    document.getElementById('r-dims').textContent = sh.toFixed(1) + '" H × ' + sw.toFixed(1) + '" W';
+  } else {
+    document.getElementById('r-rec').textContent = 'Custom';
+    document.getElementById('r-dims').textContent = 'Exceeds standard sizes';
+  }
+
+  // Formula box
+  document.getElementById('formula-box').innerHTML =
+    '<strong>Formula</strong><br>' +
+    '<code>IH = (FV × 12) ÷ ' + divisor + '</code><br>' +
+    '= (' + fv + ' × 12) ÷ ' + divisor + ' = <strong>' + ih468.toFixed(1) + '" image height</strong><br>' +
+    'Diagonal = <strong>' + diag468.toFixed(1) + '"</strong> &nbsp;→&nbsp; minimum screen size';
+
+  // Build table — only show screens that meet the minimum
+  const tbody = document.getElementById('sizes-body');
+  tbody.innerHTML = '';
+
+  SCREENS.forEach(s => {
+    if (s.diag < diag468) return;
+    const sh = s.diag / Math.sqrt(1 + ratio * ratio);
+    const sw = sh * ratio;
+    const isRec = firstRec && s.diag === firstRec.diag;
+
+    const tr = document.createElement('tr');
+    if (isRec) tr.style.fontWeight = '700';
+    tr.innerHTML =
+      '<td>' + s.label + '</td>' +
+      '<td>' + sh.toFixed(1) + '" × ' + sw.toFixed(1) + '"</td>' +
+      '<td>' + (isRec ? '<span class="badge badge-rec">Recommended</span>' : '<span class="badge badge-pass">Works</span>') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  if (tbody.innerHTML === '') {
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--gray-mid); font-style:italic;">Exceeds standard sizes — consider a video wall product</td></tr>';
+  }
+}
+
+update();
+</script>
+</body>
+</html>
